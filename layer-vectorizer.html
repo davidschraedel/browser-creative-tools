@@ -526,6 +526,22 @@
       $("dice").onclick = () => {
         if (!img) return;
         seed = (Math.random() * 1e6) | 0;
+        // Lightly nudge a slider around its current value, within its range.
+        const jit = (id, amt) => {
+          const el = $(id),
+            step = +el.step || 1,
+            lo = +el.min,
+            hi = +el.max;
+          const v = +el.value + (Math.random() * 2 - 1) * amt;
+          el.value = Math.max(lo, Math.min(hi, Math.round(v / step) * step));
+        };
+        // Keep the number of colors fixed if cut-offs or colors are locked.
+        if (!$("lkT").checked && !$("lkC").checked) jit("k", 1.5);
+        jit("s", 2);
+        jit("d", 96);
+        jit("p", 15);
+        jit("b", 1.5);
+        jit("m", 1.5);
         const K = +$("k").value;
         if (!$("lkT").checked)
           manualTh = clampTh(
