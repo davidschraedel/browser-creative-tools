@@ -1,0 +1,54 @@
+/* Shared site navigation. Everything is scoped under .site-nav so it can't
+   collide with tool styles. Colors borrow each page's theme variables
+   (--panel, --line, --ink, --mute, --acc) and fall back to neutral values. */
+.site-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  padding: 10px 20px;
+  background: var(--panel, #fff);
+  border-bottom: 1px solid var(--line, #d9dce3);
+  font:
+    600 14px/1.2 "Avenir Next",
+    Avenir,
+    "Segoe UI",
+    system-ui,
+    sans-serif;
+}
+
+/* The links travel as one group: if they don't all fit beside the logo,
+   the whole group drops below it instead of wrapping one at a time. */
+.site-nav .links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+}
+.site-nav a {
+  color: var(--mute, #6b7080);
+  text-decoration: none;
+  padding: 4px 0;
+  border-bottom: 2px solid transparent;
+}
+.site-nav a:hover {
+  color: var(--ink, #14161f);
+}
+.site-nav a:focus-visible {
+  outline: 2px solid var(--acc, #3a3aff);
+  outline-offset: 2px;
+}
+.site-nav a[aria-current="page"] {
+  color: var(--ink, #14161f);
+  border-bottom-color: var(--acc, #3a3aff);
+}
+.site-nav .home {
+  color: var(--ink, #14161f);
+  margin-right: 6px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  /* Crisp offset shadow: no blur, no glow. */
+  text-shadow: 1px 1px 0 rgba(0, 0, 0, 0.18);
+  text-shadow: 1px 1px 0
+    color-mix(in srgb, var(--ink, #14161f) 18%, transparent);
+}

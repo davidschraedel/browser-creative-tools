@@ -68,8 +68,18 @@
         gap: 20px;
       }
       @media (max-width: 800px) {
+        /* Single column: let the image stay pinned while controls scroll. */
         main {
-          grid-template-columns: 1fr;
+          display: block;
+        }
+        main > section {
+          display: contents;
+        }
+        main > .panel {
+          margin-top: 16px;
+        }
+        main .stage canvas {
+          max-height: 38vh;
         }
       }
       h1 {
@@ -77,20 +87,23 @@
           700 24px/1.1 Georgia,
           "Iowan Old Style",
           serif;
-        margin: 0;
+        margin: 0 0 14px;
       }
-      .sub {
-        color: var(--mute);
-        margin: 4px 0 14px;
-      }
+
       .stage {
-        background: var(--panel);
+        /* Soft neutral backdrop so a light image doesn't sit on stark white. */
+        background: var(--bg);
+        background: color-mix(in srgb, var(--ink) 9%, var(--bg));
+        box-shadow: inset 0 1px 4px rgba(0, 0, 0, 0.08);
         border: 1px solid var(--line);
         border-radius: 10px;
         padding: 12px;
         display: grid;
         place-items: center;
         min-height: 260px;
+        position: sticky;
+        top: 12px;
+        z-index: 2;
       }
       .wrap {
         position: relative;
@@ -226,15 +239,21 @@
         margin-top: 10px;
       }
     </style>
+    <link rel="stylesheet" href="assets/site-nav.css" />
   </head>
   <body>
+    <nav class="site-nav" aria-label="Site">
+      <a class="home" href="index.html">Browser Creative Tools</a>
+      <div class="links">
+        <a href="pixel-shuffle.html" aria-current="page">Pixel shuffle</a>
+        <a href="pixel-cluster-shuffle.html">Shape shuffle</a>
+        <a href="layer-vectorizer.html">Layer vectorizer</a>
+      </div>
+    </nav>
     <main>
       <section>
         <h1>Pixel shuffle</h1>
-        <p class="sub">
-          Swap random pixels, one pair at a time or by the thousand. Export when
-          it looks right.
-        </p>
+
         <div class="stage">
           <div class="wrap">
             <canvas id="cv"></canvas><canvas id="ov"></canvas>
