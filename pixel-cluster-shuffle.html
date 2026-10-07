@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Shape Shuffle</title>
+    <style>
+      :root {
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        --bg: #eef0f3;
+        --panel: #fff;
+        --ink: #14161f;
+        --mute: #6b7080;
+        --line: #d9dce3;
+        --acc: #3a3aff;
+        --accink: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #101219;
+          --panel: #191c26;
+          --ink: #eceef5;
+          --mute: #8a90a2;
+          --line: #2b2f3d;
+          --acc: #7c7cff;
+          --accink: #0c0d18;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #101219;
+        --panel: #191c26;
+        --ink: #eceef5;
+        --mute: #8a90a2;
+        --line: #2b2f3d;
+        --acc: #7c7cff;
+        --accink: #0c0d18;
+      }
+      *,
+      *:before,
+      *:after {
+        box-sizing: inherit;
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.45 "Avenir Next",
+          Avenir,
+          "Segoe UI",
+          system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 20px;
+      }
+      @media (max-width: 800px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+      h1 {
+        font:
+          700 24px/1.1 Georgia,
+          "Iowan Old Style",
+          serif;
+        margin: 0;
+      }
+      .sub {
+        color: var(--mute);
+        margin: 4px 0 14px;
+      }
+      .stage {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px;
+        display: grid;
+        place-items: center;
+        min-height: 260px;
+      }
+      .wrap {
+        position: relative;
+        display: inline-block;
+        max-width: 100%;
+        line-height: 0;
+      }
+      canvas {
+        display: block;
+        max-width: 100%;
+        max-height: 72vh;
+        width: auto;
+        height: auto;
+        image-rendering: pixelated;
+      }
+      #ov {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px;
+        align-self: start;
+      }
+      .big {
+        font:
+          700 44px/1 Georgia,
+          serif;
+        font-variant-numeric: tabular-nums;
+      }
+      .small {
+        color: var(--mute);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .bar {
+        height: 8px;
+        border-radius: 4px;
+        background: var(--line);
+        margin-top: 12px;
+        overflow: hidden;
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--acc);
+        transition: width 0.2s;
+      }
+      .ticks {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 34px;
+        margin-top: 12px;
+      }
+      .ticks b {
+        flex: 1;
+        min-width: 2px;
+        max-width: 10px;
+        background: var(--acc);
+        opacity: 0.75;
+        border-radius: 1px;
+      }
+      .ticks b:last-child {
+        opacity: 1;
+      }
+      button {
+        font: inherit;
+        font-weight: 600;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--ink);
+        border-radius: 8px;
+        padding: 9px 12px;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      button.primary {
+        background: var(--acc);
+        color: var(--accink);
+        border-color: var(--acc);
+        width: 100%;
+        font-size: 17px;
+        padding: 13px;
+        margin-top: 16px;
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--acc);
+        outline-offset: 2px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .chips button {
+        padding: 5px 10px;
+        font-size: 13px;
+      }
+      .chips button.on {
+        background: var(--ink);
+        color: var(--bg);
+        border-color: var(--ink);
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+      .row button {
+        flex: 1;
+      }
+      label.h {
+        display: block;
+        font-weight: 600;
+        margin-top: 16px;
+      }
+      .note {
+        color: var(--mute);
+        font-size: 12.5px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section>
+        <h1>Shape shuffle</h1>
+        <p class="sub">
+          Swap random connected shapes of pixels with shapes somewhere else.
+          Export when it looks right.
+        </p>
+        <div class="stage">
+          <div class="wrap">
+            <canvas id="cv"></canvas><canvas id="ov"></canvas>
+          </div>
+        </div>
+      </section>
+      <aside class="panel">
+        <div class="row" style="margin-top: 0">
+          <button id="pick">Choose image</button
+          ><button id="reset">Reset</button>
+        </div>
+        <input type="file" id="file" accept="image/*" hidden />
+        <div style="margin-top: 18px">
+          <div class="big" id="total">0</div>
+          <div class="small" id="meta">swaps so far</div>
+          <div class="bar"><i id="fill"></i></div>
+          <div class="small" id="touched">No pixels moved yet</div>
+          <div class="ticks" id="ticks" aria-label="Swaps per click"></div>
+        </div>
+        <button class="primary" id="swap">Swap shapes</button>
+        <label class="h">Pixels per shape</label>
+        <div class="chips" id="sizes"></div>
+        <label class="h">Shape swaps per click</label>
+        <div class="chips" id="counts"></div>
+        <label class="h">Shape style</label>
+        <div class="chips" id="styles"></div>
+        <label class="h">Matching</label>
+        <div class="chips" id="modes"></div>
+        <label class="h">Earlier swaps</label>
+        <div class="chips" id="ovl"></div>
+        <div class="row">
+          <button id="auto">Auto-run</button
+          ><button id="undo" disabled>Undo</button>
+        </div>
+        <div class="row">
+          <button id="exp" style="background: var(--ink); color: var(--bg)">
+            Export PNG
+          </button>
+        </div>
+        <p class="note">
+          Each shape grows outward from a random pixel into a connected blob,
+          then trades places with another shape of the same pixel count. Space
+          swaps, Z undoes. A click or an auto-run is one undo step. Every choice
+          comes from your browser's secure random generator.
+        </p>
+      </aside>
+    </main>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const cv = $("cv"),
+        cx = cv.getContext("2d", { willReadFrequently: true }),
+        ov = $("ov"),
+        ox = ov.getContext("2d");
+      let W,
+        H,
+        N,
+        img,
+        d32,
+        orig,
+        mark,
+        inA,
+        stamp = 0,
+        oi,
+        log = new Uint32Array(1 << 16),
+        nlog = 0,
+        batches = [],
+        shapes = 0,
+        pairs = 0,
+        auto = false,
+        openB = null,
+        lastMarks = [];
+      let trackedPx = 0,
+        ovAnim = null,
+        diff = 0,
+        okN = 0,
+        AVOID = true,
+        hit,
+        SIZE = 10,
+        CNT = 1,
+        STY = "mix",
+        SAME = false;
+      const fmt = (n) => n.toLocaleString(),
+        pool = new Uint32Array(8192);
+      let pi = 8192;
+      function rnd() {
+        if (pi >= 8192) {
+          crypto.getRandomValues(pool);
+          pi = 0;
+        }
+        return pool[pi++] / 4294967296;
+      }
+      function setImage(im) {
+        const w = im.naturalWidth || im.width,
+          h = im.naturalHeight || im.height,
+          sc = Math.min(1, 2048 / Math.max(w, h));
+        W = Math.max(1, Math.round(w * sc));
+        H = Math.max(1, Math.round(h * sc));
+        N = W * H;
+        cv.width = ov.width = W;
+        cv.height = ov.height = H;
+        cx.drawImage(im, 0, 0, W, H);
+        img = cx.getImageData(0, 0, W, H);
+        d32 = new Uint32Array(img.data.buffer);
+        orig = d32.slice();
+        mark = new Uint32Array(N);
+        hit = new Uint16Array(N);
+        inA = new Uint32Array(N);
+        stamp = 0;
+        oi = ox.createImageData(W, H);
+        cv.style.imageRendering = N < 200000 ? "pixelated" : "auto";
+        hardReset();
+      }
+      function hardReset() {
+        stopAuto();
+        nlog = 0;
+        batches = [];
+        shapes = 0;
+        pairs = 0;
+        diff = 0;
+        if (hit) hit.fill(0);
+        openB = null;
+        lastMarks = [];
+        if (orig) {
+          d32.set(orig);
+          cx.putImageData(img, 0, 0);
+        }
+        ox.clearRect(0, 0, W, H);
+        ui();
+      }
+      function sw(a, b, d = 1) {
+        hit[a] += d;
+        hit[b] += d;
+        const x = d32[a] !== orig[a],
+          y = d32[b] !== orig[b],
+          t = d32[a];
+        d32[a] = d32[b];
+        d32[b] = t;
+        diff += (d32[a] !== orig[a]) - x + (d32[b] !== orig[b]) - y;
+      }
+      function push(a, b) {
+        if (nlog + 2 > log.length) {
+          const n = new Uint32Array(log.length * 2);
+          n.set(log);
+          log = n;
+        }
+        log[nlog++] = a;
+        log[nlog++] = b;
+      }
+      // Each shape gets its own random growth rules: stringiness (st), ragged edges (q),
+      // a random bias for each direction (w), and 4- or 8-way connectivity (diag).
+      const DX = [1, -1, 0, 0, 1, 1, -1, -1],
+        DY = [0, 0, 1, -1, 1, -1, 1, -1];
+      function makeP() {
+        if (STY === "blob")
+          return {
+            st: 0.05,
+            q: 0.85 + 0.15 * rnd(),
+            w: [0, 1, 2, 3].map(() => 0.7 + 0.3 * rnd()),
+            diag: rnd() < 0.5,
+          };
+        if (STY === "string")
+          return {
+            st: 0.85 + 0.14 * rnd(),
+            q: 0.5 + 0.4 * rnd(),
+            w: [0, 1, 2, 3].map(() => 0.3 + 0.7 * rnd()),
+            diag: rnd() < 0.3,
+          };
+        return {
+          st: rnd() ** 1.5,
+          q: 0.4 + 0.6 * rnd(),
+          w: [0, 1, 2, 3].map(() => 0.25 + 0.75 * rnd()),
+          diag: rnd() < 0.5,
+        };
+      }
+      function grow(seed, K, stp, out, P, block) {
+        const fr = [seed],
+          nd = P.diag ? 8 : 4;
+        mark[seed] = stp;
+        const free = (n) =>
+          mark[n] !== stp && inA[n] !== block && !(AVOID && hit[n]);
+        while (out.length < K) {
+          if (!fr.length) {
+            for (const c of out) {
+              const x = c % W,
+                y = (c / W) | 0;
+              for (let d = 0; d < nd; d++) {
+                const nx = x + DX[d],
+                  ny = y + DY[d];
+                if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+                const n = ny * W + nx;
+                if (free(n)) {
+                  mark[n] = stp;
+                  fr.push(n);
+                }
+              }
+            }
+            if (!fr.length) break;
+          }
+          const i = rnd() < P.st ? fr.length - 1 : (rnd() * fr.length) | 0,
+            c = fr[i];
+          fr[i] = fr[fr.length - 1];
+          fr.pop();
+          out.push(c);
+          const x = c % W,
+            y = (c / W) | 0;
+          for (let d = 0; d < nd; d++) {
+            const nx = x + DX[d],
+              ny = y + DY[d];
+            if (nx < 0 || ny < 0 || nx >= W || ny >= H) continue;
+            const n = ny * W + nx;
+            if (!free(n)) continue;
+            if (
+              rnd() >
+              P.q *
+                (d < 4 ? P.w[d] : (P.w[(d - 4) >> 1] + P.w[2 + (d & 1)]) / 2)
+            )
+              continue;
+            mark[n] = stp;
+            fr.push(n);
+          }
+        }
+      }
+      function shapeSwap(K, track) {
+        K = Math.max(1, Math.min(K, N >> 1));
+        for (let attempt = 0; attempt < (SAME ? 12 : 1); attempt++) {
+          const s = (stamp += 2),
+            A = [];
+          let sa = -1;
+          for (let t = 0; t < 60; t++) {
+            const c = (rnd() * N) | 0;
+            if (!(AVOID && hit[c])) {
+              sa = c;
+              break;
+            }
+          }
+          if (sa < 0) return 0;
+          grow(sa, K, s, A, makeP(), -1);
+          for (const c of A) inA[c] = s;
+          let B = null;
+          if (SAME) {
+            // second copy of the exact same outline, slid to a random spot that still fits
+            let x0 = W,
+              x1 = 0,
+              y0 = H,
+              y1 = 0;
+            for (const c of A) {
+              const x = c % W,
+                y = (c / W) | 0;
+              if (x < x0) x0 = x;
+              if (x > x1) x1 = x;
+              if (y < y0) y0 = y;
+              if (y > y1) y1 = y;
+            }
+            for (let t = 0; t < 80 && !B; t++) {
+              const dx = -x0 + Math.floor(rnd() * (W - x1 + x0)),
+                dy = -y0 + Math.floor(rnd() * (H - y1 + y0)),
+                cand = [];
+              let ok = true;
+              for (const c of A) {
+                const n = (((c / W) | 0) + dy) * W + (c % W) + dx;
+                if (inA[n] === s || (AVOID && hit[n])) {
+                  ok = false;
+                  break;
+                }
+                cand.push(n);
+              }
+              if (ok) B = cand;
+            }
+          } else {
+            for (let t = 0; t < 40 && !B; t++) {
+              const sb = (rnd() * N) | 0;
+              if (inA[sb] === s || (AVOID && hit[sb])) continue;
+              const cand = [];
+              grow(sb, A.length, s + 1, cand, makeP(), s);
+              if (cand.length) B = cand;
+            }
+          }
+          if (!B) continue;
+          const m = Math.min(A.length, B.length);
+          for (let i = 0; i < m; i++) {
+            const a = A[i],
+              b = B[i];
+            sw(a, b);
+            push(a, b);
+          }
+          if (track && trackedPx < 200000) {
+            lastMarks.push([A.slice(0, m), B.slice(0, m)]);
+            trackedPx += 2 * m;
+          }
+          return m;
+        }
+        return 0;
+      }
+      function run(n, track) {
+        let p = 0,
+          ok = 0;
+        if (track) {
+          lastMarks = [];
+          trackedPx = 0;
+        }
+        for (let i = 0; i < n; i++) {
+          const m = shapeSwap(SIZE, track);
+          if (m) {
+            p += m;
+            ok++;
+          }
+        }
+        okN = ok;
+        return p;
+      }
+      function swapClick() {
+        if (!img) return;
+        const p = run(CNT, true);
+        if (!p) {
+          $("meta").textContent =
+            "No room for that shape size. Try a smaller size, undo, or allow overlap.";
+          return;
+        }
+        batches.push({ n: p, s: okN });
+        shapes += okN;
+        pairs += p;
+        show();
+      }
+      function show() {
+        cx.putImageData(img, 0, 0);
+        marks();
+        ui();
+      }
+      function marks() {
+        oi.data.fill(0);
+        for (const [A, B] of lastMarks) {
+          for (const c of A) {
+            const o = c * 4;
+            oi.data[o] = 58;
+            oi.data[o + 1] = 58;
+            oi.data[o + 2] = 255;
+            oi.data[o + 3] = 150;
+          }
+          for (const c of B) {
+            const o = c * 4;
+            oi.data[o] = 255;
+            oi.data[o + 1] = 50;
+            oi.data[o + 2] = 140;
+            oi.data[o + 3] = 150;
+          }
+        }
+        ox.putImageData(oi, 0, 0);
+        if (ovAnim) ovAnim.cancel();
+        ovAnim = null;
+        if (lastMarks.length)
+          ovAnim = ov.animate(
+            [{ opacity: 1 }, { opacity: 1, offset: 0.25 }, { opacity: 0 }],
+            { duration: 600, easing: "ease-out", fill: "forwards" },
+          );
+      }
+      function undo() {
+        if (auto) stopAuto();
+        const b = batches.pop();
+        if (!b) return;
+        for (let k = 0; k < b.n; k++) {
+          nlog -= 2;
+          sw(log[nlog], log[nlog + 1], -1);
+        }
+        shapes -= b.s;
+        pairs -= b.n;
+        lastMarks = [];
+        show();
+      }
+      function ui() {
+        $("total").textContent = fmt(shapes);
+        $("meta").textContent =
+          `shape swap${shapes === 1 ? "" : "s"} across ${fmt(batches.length)} step${batches.length === 1 ? "" : "s"}`;
+        const frac = diff / N,
+          pct =
+            frac === 0
+              ? "0"
+              : frac < 0.1
+                ? (frac * 100).toFixed(1)
+                : frac > 0.995 && diff < N
+                  ? "99+"
+                  : Math.round(frac * 100);
+        $("fill").style.width = frac * 100 + "%";
+        $("touched").textContent = pairs
+          ? `${fmt(pairs * 2)} pixels moved. ${pct}% of the image now differs from the original`
+          : "Nothing moved yet";
+        const last = batches.slice(-60),
+          mx = Math.log1p(Math.max(1, ...last.map((b) => b.n)));
+        $("ticks").innerHTML = last
+          .map(
+            (b) =>
+              `<b style="height:${Math.max(8, (Math.log1p(b.n) / mx) * 100)}%" title="${fmt(b.s)} shape swaps"></b>`,
+          )
+          .join("");
+        $("undo").disabled = !batches.length;
+      }
+      function stopAuto() {
+        auto = false;
+        openB = null;
+        $("auto").textContent = "Auto-run";
+      }
+      function loop() {
+        if (!auto) return;
+        if (!openB) {
+          openB = { n: 0, s: 0 };
+          batches.push(openB);
+        }
+        const t0 = performance.now();
+        let k = 0;
+        do {
+          const p = run(1, false);
+          if (!p) {
+            stopAuto();
+            break;
+          }
+          openB.n += p;
+          pairs += p;
+          shapes += okN;
+          openB.s += okN;
+          k++;
+        } while (k < CNT && performance.now() - t0 < 14);
+        lastMarks = [];
+        show();
+        requestAnimationFrame(loop);
+      }
+      $("auto").onclick = () => {
+        if (!img) return;
+        if (auto) {
+          stopAuto();
+          ui();
+          return;
+        }
+        auto = true;
+        $("auto").textContent = "Stop";
+        requestAnimationFrame(loop);
+      };
+      $("swap").onclick = () => {
+        if (auto) stopAuto();
+        swapClick();
+      };
+      $("undo").onclick = undo;
+      $("reset").onclick = hardReset;
+      function chips(id, opts, def, fn) {
+        const box = $(id);
+        opts.forEach(([label, val]) => {
+          const b = document.createElement("button");
+          b.textContent = label;
+          b.onclick = () => {
+            fn(val);
+            [...box.children].forEach((c) => c.classList.toggle("on", c === b));
+          };
+          if (val === def) b.classList.add("on");
+          box.appendChild(b);
+        });
+      }
+      chips(
+        "sizes",
+        [
+          [4, 4],
+          [10, 10],
+          [25, 25],
+          [100, 100],
+          [500, 500],
+          ["2.5K", 2500],
+          ["10K", 10000],
+        ],
+        10,
+        (v) => (SIZE = v),
+      );
+      chips(
+        "counts",
+        [
+          [1, 1],
+          [5, 5],
+          [25, 25],
+          [100, 100],
+          [500, 500],
+        ],
+        1,
+        (v) => (CNT = v),
+      );
+      chips(
+        "styles",
+        [
+          ["Mixed", "mix"],
+          ["Blobby", "blob"],
+          ["Stringy", "string"],
+        ],
+        "mix",
+        (v) => (STY = v),
+      );
+      chips(
+        "ovl",
+        [
+          ["Keep intact", true],
+          ["Allow overlap", false],
+        ],
+        true,
+        (v) => (AVOID = v),
+      );
+      chips(
+        "modes",
+        [
+          ["Different shapes", false],
+          ["Same shape", true],
+        ],
+        false,
+        (v) => (SAME = v),
+      );
+      $("exp").onclick = () => {
+        cv.toBlob((bl) => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(bl);
+          a.download = `shape-shuffle-${shapes}-swaps.png`;
+          a.click();
+        }, "image/png");
+      };
+      addEventListener("keyup", (e) => {
+        if (e.code === "Space") e.preventDefault();
+      });
+      addEventListener("keydown", (e) => {
+        if (e.code === "Space") {
+          e.preventDefault();
+          $("swap").click();
+        } else if (e.key === "z" || e.key === "Z") undo();
+      });
+      function load(f) {
+        if (!f) return;
+        const im = new Image();
+        im.onload = () => setImage(im);
+        im.src = URL.createObjectURL(f);
+      }
+      $("pick").onclick = () => $("file").click();
+      $("file").onchange = (e) => load(e.target.files[0]);
+      addEventListener("dragover", (e) => e.preventDefault());
+      addEventListener("drop", (e) => {
+        e.preventDefault();
+        load(e.dataTransfer.files[0]);
+      });
+      (() => {
+        const c = document.createElement("canvas");
+        c.width = c.height = 240;
+        const x = c.getContext("2d"),
+          g = x.createLinearGradient(0, 0, 240, 240);
+        ["#ff3b6b", "#ffb02e", "#2ee6a6", "#2e7bff", "#9b3bff"].forEach(
+          (t, i) => g.addColorStop(i / 4, t),
+        );
+        x.fillStyle = g;
+        x.fillRect(0, 0, 240, 240);
+        x.fillStyle = "rgba(0,0,0,.35)";
+        x.beginPath();
+        x.arc(120, 120, 70, 0, 7);
+        x.fill();
+        x.fillStyle = "#fff";
+        x.fillRect(100, 100, 40, 40);
+        setImage(c);
+      })();
+    </script>
+  </body>
+</html>

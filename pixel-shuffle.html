@@ -1,0 +1,535 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Pixel Shuffle</title>
+    <style>
+      :root {
+        box-sizing: border-box;
+        padding-top: env(safe-area-inset-top, 0px);
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        --bg: #eef0f3;
+        --panel: #fff;
+        --ink: #14161f;
+        --mute: #6b7080;
+        --line: #d9dce3;
+        --acc: #3a3aff;
+        --accink: #fff;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --bg: #101219;
+          --panel: #191c26;
+          --ink: #eceef5;
+          --mute: #8a90a2;
+          --line: #2b2f3d;
+          --acc: #7c7cff;
+          --accink: #0c0d18;
+        }
+      }
+      :root[data-theme="dark"] {
+        --bg: #101219;
+        --panel: #191c26;
+        --ink: #eceef5;
+        --mute: #8a90a2;
+        --line: #2b2f3d;
+        --acc: #7c7cff;
+        --accink: #0c0d18;
+      }
+      *,
+      *:before,
+      *:after {
+        box-sizing: inherit;
+      }
+      html {
+        scroll-padding-top: env(safe-area-inset-top, 0px);
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font:
+          15px/1.45 "Avenir Next",
+          Avenir,
+          "Segoe UI",
+          system-ui,
+          sans-serif;
+      }
+      main {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 300px;
+        gap: 20px;
+      }
+      @media (max-width: 800px) {
+        main {
+          grid-template-columns: 1fr;
+        }
+      }
+      h1 {
+        font:
+          700 24px/1.1 Georgia,
+          "Iowan Old Style",
+          serif;
+        margin: 0;
+      }
+      .sub {
+        color: var(--mute);
+        margin: 4px 0 14px;
+      }
+      .stage {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 12px;
+        display: grid;
+        place-items: center;
+        min-height: 260px;
+      }
+      .wrap {
+        position: relative;
+        display: inline-block;
+        max-width: 100%;
+        line-height: 0;
+      }
+      canvas {
+        display: block;
+        max-width: 100%;
+        max-height: 72vh;
+        width: auto;
+        height: auto;
+        image-rendering: pixelated;
+      }
+      #ov {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        pointer-events: none;
+      }
+      .panel {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 16px;
+        align-self: start;
+      }
+      .big {
+        font:
+          700 44px/1 Georgia,
+          serif;
+        font-variant-numeric: tabular-nums;
+      }
+      .small {
+        color: var(--mute);
+        font-size: 13px;
+        margin-top: 4px;
+      }
+      .bar {
+        height: 8px;
+        border-radius: 4px;
+        background: var(--line);
+        margin-top: 12px;
+        overflow: hidden;
+      }
+      .bar i {
+        display: block;
+        height: 100%;
+        width: 0;
+        background: var(--acc);
+        transition: width 0.2s;
+      }
+      .ticks {
+        display: flex;
+        align-items: flex-end;
+        gap: 2px;
+        height: 34px;
+        margin-top: 12px;
+      }
+      .ticks b {
+        flex: 1;
+        min-width: 2px;
+        max-width: 10px;
+        background: var(--acc);
+        opacity: 0.75;
+        border-radius: 1px;
+      }
+      .ticks b:last-child {
+        opacity: 1;
+      }
+      button {
+        font: inherit;
+        font-weight: 600;
+        border: 1px solid var(--line);
+        background: transparent;
+        color: var(--ink);
+        border-radius: 8px;
+        padding: 9px 12px;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      button.primary {
+        background: var(--acc);
+        color: var(--accink);
+        border-color: var(--acc);
+        width: 100%;
+        font-size: 17px;
+        padding: 13px;
+        margin-top: 16px;
+      }
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--acc);
+        outline-offset: 2px;
+      }
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 8px;
+      }
+      .chips button {
+        padding: 5px 10px;
+        font-size: 13px;
+      }
+      .chips button.on {
+        background: var(--ink);
+        color: var(--bg);
+        border-color: var(--ink);
+      }
+      .row {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+        flex-wrap: wrap;
+      }
+      .row button {
+        flex: 1;
+      }
+      label.h {
+        display: block;
+        font-weight: 600;
+        margin-top: 16px;
+      }
+      .note {
+        color: var(--mute);
+        font-size: 12.5px;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section>
+        <h1>Pixel shuffle</h1>
+        <p class="sub">
+          Swap random pixels, one pair at a time or by the thousand. Export when
+          it looks right.
+        </p>
+        <div class="stage">
+          <div class="wrap">
+            <canvas id="cv"></canvas><canvas id="ov"></canvas>
+          </div>
+        </div>
+      </section>
+      <aside class="panel">
+        <div class="row" style="margin-top: 0">
+          <button id="pick">Choose image</button
+          ><button id="reset">Reset</button>
+        </div>
+        <input type="file" id="file" accept="image/*" hidden />
+        <div style="margin-top: 18px">
+          <div class="big" id="total">0</div>
+          <div class="small" id="meta">swaps so far</div>
+          <div class="bar"><i id="fill"></i></div>
+          <div class="small" id="touched">No pixels moved yet</div>
+          <div class="ticks" id="ticks" aria-label="Swaps per click"></div>
+        </div>
+        <button class="primary" id="swap">Swap</button>
+        <label class="h">Pixel pairs per click</label>
+        <div class="chips" id="chips"></div>
+        <div class="row">
+          <button id="auto">Auto-run</button
+          ><button id="undo" disabled>Undo</button>
+        </div>
+        <div class="row">
+          <button id="exp" style="background: var(--ink); color: var(--bg)">
+            Export PNG
+          </button>
+        </div>
+        <p class="note">
+          Space swaps, Z undoes. Each click is one undo step, and an auto-run
+          counts as one step. Every swap picks two positions from your browser's
+          secure random generator.
+        </p>
+      </aside>
+    </main>
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const cv = $("cv"),
+        cx = cv.getContext("2d", { willReadFrequently: true }),
+        ov = $("ov"),
+        ox = ov.getContext("2d");
+      let W,
+        H,
+        N,
+        img,
+        d32,
+        orig,
+        log = new Uint32Array(1 << 16),
+        nlog = 0,
+        batches = [],
+        total = 0,
+        amt = 1,
+        auto = false,
+        openB = null,
+        lastPairs = [];
+      const fmt = (n) => n.toLocaleString();
+      function setImage(im) {
+        const w = im.naturalWidth || im.width,
+          h = im.naturalHeight || im.height,
+          sc = Math.min(1, 4096 / Math.max(w, h));
+        W = Math.max(1, Math.round(w * sc));
+        H = Math.max(1, Math.round(h * sc));
+        N = W * H;
+        cv.width = ov.width = W;
+        cv.height = ov.height = H;
+        cx.drawImage(im, 0, 0, W, H);
+        img = cx.getImageData(0, 0, W, H);
+        d32 = new Uint32Array(img.data.buffer);
+        orig = d32.slice();
+        cv.style.imageRendering = N < 200000 ? "pixelated" : "auto";
+        hardReset();
+      }
+      function hardReset() {
+        stopAuto();
+        nlog = 0;
+        batches = [];
+        total = 0;
+        openB = null;
+        lastPairs = [];
+        if (orig) {
+          d32.set(orig);
+          cx.putImageData(img, 0, 0);
+        }
+        ox.clearRect(0, 0, W, H);
+        ui();
+      }
+      function push(a, b) {
+        if (nlog + 2 > log.length) {
+          const n = new Uint32Array(log.length * 2);
+          n.set(log);
+          log = n;
+        }
+        log[nlog++] = a;
+        log[nlog++] = b;
+      }
+      function doSwaps(n, track) {
+        const buf = new Uint32Array(16384);
+        lastPairs = [];
+        for (let done = 0; done < n; ) {
+          const m = Math.min(8192, n - done),
+            v = buf.subarray(0, m * 2);
+          crypto.getRandomValues(v);
+          for (let i = 0; i < m; i++) {
+            const a = Math.floor((v[2 * i] / 4294967296) * N);
+            let b = Math.floor((v[2 * i + 1] / 4294967296) * N);
+            if (b === a) b = (b + 1) % N;
+            const t = d32[a];
+            d32[a] = d32[b];
+            d32[b] = t;
+            push(a, b);
+            if (track && lastPairs.length < 10) lastPairs.push([a, b]);
+          }
+          done += m;
+        }
+      }
+      function swapClick() {
+        if (!img) return;
+        doSwaps(amt, true);
+        batches.push({ n: amt });
+        total += amt;
+        show();
+      }
+      function show() {
+        cx.putImageData(img, 0, 0);
+        marks();
+        ui();
+      }
+      function marks() {
+        ox.clearRect(0, 0, W, H);
+        if (!lastPairs.length || lastPairs.length > 10 || amt > 10) return;
+        const ac =
+            getComputedStyle(document.documentElement)
+              .getPropertyValue("--acc")
+              .trim() || "#3a3aff",
+          r = Math.max(3, Math.max(W, H) / 70);
+        ox.strokeStyle = ac;
+        ox.lineWidth = Math.max(1, Math.max(W, H) / 350);
+        for (const [a, b] of lastPairs) {
+          const ax = (a % W) + 0.5,
+            ay = ((a / W) | 0) + 0.5,
+            bx = (b % W) + 0.5,
+            by = ((b / W) | 0) + 0.5;
+          ox.beginPath();
+          ox.moveTo(ax, ay);
+          ox.lineTo(bx, by);
+          ox.globalAlpha = 0.35;
+          ox.stroke();
+          ox.globalAlpha = 1;
+          for (const [x, y] of [
+            [ax, ay],
+            [bx, by],
+          ]) {
+            ox.beginPath();
+            ox.arc(x, y, r, 0, 7);
+            ox.stroke();
+          }
+        }
+      }
+      function undo() {
+        if (auto) stopAuto();
+        const b = batches.pop();
+        if (!b) return;
+        for (let k = 0; k < b.n; k++) {
+          nlog -= 2;
+          const a = log[nlog],
+            c = log[nlog + 1],
+            t = d32[a];
+          d32[a] = d32[c];
+          d32[c] = t;
+        }
+        total -= b.n;
+        lastPairs = [];
+        show();
+      }
+      function ui() {
+        $("total").textContent = fmt(total);
+        $("meta").textContent =
+          `swap${total === 1 ? "" : "s"} across ${fmt(batches.length)} step${batches.length === 1 ? "" : "s"}`;
+        const frac = total ? 1 - Math.exp((-2 * total) / N) : 0;
+        $("fill").style.width = frac * 100 + "%";
+        $("touched").textContent = total
+          ? `About ${frac < 0.995 ? Math.round(frac * 100) : "99+"}% of pixels have moved at least once`
+          : "No pixels moved yet";
+        const last = batches.slice(-60),
+          mx = Math.log1p(Math.max(1, ...last.map((b) => b.n)));
+        $("ticks").innerHTML = last
+          .map(
+            (b) =>
+              `<b style="height:${Math.max(8, (Math.log1p(b.n) / mx) * 100)}%" title="${fmt(b.n)} swaps"></b>`,
+          )
+          .join("");
+        $("undo").disabled = !batches.length;
+      }
+      function stopAuto() {
+        auto = false;
+        openB = null;
+        $("auto").textContent = "Auto-run";
+        $("auto").classList.remove("on");
+      }
+      function loop() {
+        if (!auto) return;
+        if (!openB) {
+          openB = { n: 0 };
+          batches.push(openB);
+        }
+        const per = Math.max(1, Math.min(amt, 50000));
+        doSwaps(per, false);
+        openB.n += per;
+        total += per;
+        lastPairs = [];
+        show();
+        requestAnimationFrame(loop);
+      }
+      $("auto").onclick = () => {
+        if (!img) return;
+        if (auto) {
+          stopAuto();
+          ui();
+          return;
+        }
+        auto = true;
+        $("auto").textContent = "Stop";
+        requestAnimationFrame(loop);
+      };
+      $("swap").onclick = () => {
+        if (auto) stopAuto();
+        swapClick();
+      };
+      $("undo").onclick = undo;
+      $("reset").onclick = hardReset;
+      [1, 10, 100, 1000, 10000, 100000, 1000000].forEach((n) => {
+        const b = document.createElement("button");
+        b.textContent = n >= 1000 ? n / 1000 + (n >= 1e6 ? "M" : "K") : n;
+        if (n >= 1e6) b.textContent = "1M";
+        b.onclick = () => {
+          amt = n;
+          [...$("chips").children].forEach((c) =>
+            c.classList.toggle("on", c === b),
+          );
+        };
+        if (n === 1) {
+          b.classList.add("on");
+        }
+        $("chips").appendChild(b);
+      });
+      $("exp").onclick = () => {
+        cv.toBlob((bl) => {
+          const a = document.createElement("a");
+          a.href = URL.createObjectURL(bl);
+          a.download = `pixel-shuffle-${total}-swaps.png`;
+          a.click();
+        }, "image/png");
+      };
+      addEventListener("keydown", (e) => {
+        if (e.target.tagName === "INPUT") return;
+        if (e.code === "Space") {
+          e.preventDefault();
+          $("swap").click();
+        } else if (e.key === "z" || e.key === "Z") undo();
+      });
+      function load(f) {
+        if (!f) return;
+        const im = new Image();
+        im.onload = () => setImage(im);
+        im.src = URL.createObjectURL(f);
+      }
+      $("pick").onclick = () => $("file").click();
+      $("file").onchange = (e) => load(e.target.files[0]);
+      addEventListener("dragover", (e) => e.preventDefault());
+      addEventListener("drop", (e) => {
+        e.preventDefault();
+        load(e.dataTransfer.files[0]);
+      });
+      // starter image so the tool works immediately
+      (() => {
+        const c = document.createElement("canvas");
+        c.width = c.height = 240;
+        const x = c.getContext("2d"),
+          g = x.createLinearGradient(0, 0, 240, 240);
+        ["#ff3b6b", "#ffb02e", "#2ee6a6", "#2e7bff", "#9b3bff"].forEach(
+          (s, i) => g.addColorStop(i / 4, s),
+        );
+        x.fillStyle = g;
+        x.fillRect(0, 0, 240, 240);
+        x.fillStyle = "rgba(0,0,0,.35)";
+        x.beginPath();
+        x.arc(120, 120, 70, 0, 7);
+        x.fill();
+        x.fillStyle = "#fff";
+        x.fillRect(100, 100, 40, 40);
+        setImage(c);
+      })();
+    </script>
+  </body>
+</html>
