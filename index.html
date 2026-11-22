@@ -7,25 +7,46 @@
       content="width=device-width, initial-scale=1, viewport-fit=cover"
     />
     <title>Browser Creative Tools</title>
+    <link rel="icon" type="image/svg+xml" href="assets/bc-logo.svg" />
     <link rel="stylesheet" href="assets/site-nav.css" />
     <style>
       :root {
-        --bg: #eef0f3;
-        --panel: #fff;
-        --ink: #14161f;
-        --mute: #6b7080;
-        --line: #d9dce3;
-        --acc: #3a3aff;
+        --bg: #15171a;
+        --panel: #1e2125;
+        --ink: #ece8e1;
+        --mute: #8d9299;
+        --line: #2f343a;
+        --acc: #c6a07c;
+        --accink: #1a1410;
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --bg: #101219;
-          --panel: #191c26;
-          --ink: #eceef5;
-          --mute: #8a90a2;
-          --line: #2b2f3d;
-          --acc: #7c7cff;
+      @media (prefers-color-scheme: light) {
+        :root:not([data-theme="dark"]) {
+          --bg: #eceae6;
+          --panel: #f7f6f3;
+          --ink: #1c1e21;
+          --mute: #6a6f76;
+          --line: #d6d3cc;
+          --acc: #8a5a34;
+          --accink: #fff;
         }
+      }
+      :root[data-theme="light"] {
+        --bg: #494949;
+        --panel: #f7f6f3;
+        --ink: #1c1e21;
+        --mute: #6a6f76;
+        --line: #d6d3cc;
+        --acc: #8a5a34;
+        --accink: #fff;
+      }
+      :root[data-theme="dark"] {
+        --bg: #15171a;
+        --panel: #1e2125;
+        --ink: #ece8e1;
+        --mute: #8d9299;
+        --line: #2f343a;
+        --acc: #c6a07c;
+        --accink: #1a1410;
       }
       body {
         margin: 0;
@@ -85,9 +106,9 @@
   </head>
   <body>
     <nav class="site-nav" aria-label="Site">
-      <a class="home" href="index.html" aria-current="page"
-        >Browser Creative Tools</a
-      >
+      <a class="logo-link" href="index.html" aria-label="Home" aria-current="page"
+        ><img class="logo" src="assets/bc-logo.svg" alt="" width="36" height="36"
+      /></a>
       <div class="links">
         <a href="pixel-shuffle.html">Pixel shuffle</a>
         <a href="pixel-cluster-shuffle.html">Shape shuffle</a>
