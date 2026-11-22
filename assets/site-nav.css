@@ -42,6 +42,23 @@
   color: var(--ink, #14161f);
   border-bottom-color: var(--acc, #3a3aff);
 }
+.site-nav .logo-link {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border-bottom: none;
+}
+.site-nav .logo-link:hover {
+  opacity: 0.85;
+}
+.site-nav .logo-link[aria-current="page"] {
+  border-bottom: none;
+}
+.site-nav .logo {
+  width: 36px;
+  height: 36px;
+  display: block;
+}
 .site-nav .home {
   color: var(--ink, #14161f);
   margin-right: 6px;
